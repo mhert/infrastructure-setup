@@ -1,0 +1,40 @@
+- hosts: laptop-framework-intel-core-v12-1
+  tasks:
+    - name: Install system specific packages
+      shell: |
+        arch-chroot /mnt pacman -Sy --noconfirm bluez \
+                                                bluez-utils \
+                                                fprintd \
+                                                intel-compute-runtime \
+                                                intel-gpu-tools \
+                                                intel-media-driver \
+                                                iio-sensor-proxy \
+                                                iwd \
+                                                lib32-libvdpau \
+                                                lib32-vulkan-intel \
+                                                libvdpau \
+                                                libvdpau-va-gl \
+                                                sof-firmware \
+                                                vulkan-intel \
+                                                wireless-regdb
+
+    - name: Fix background light
+      copy:
+        src: etc/modprobe.d/framework-als-deactivate.conf
+        dest: /mnt/etc/modprobe.d/framework-als-deactivate.conf
+
+    - name: Configure GPU
+      copy:
+        src: etc/modprobe.d/i915.conf
+        dest: /mnt/etc/modprobe.d/i915.conf
+
+    - name: Configure bluetooth
+      block:
+        - shell: arch-chroot /mnt systemctl enable bluetooth
+
+    - name: Configure wireless-regdb
+      block:
+        - copy:
+            content: |
+              WIRELESS_REGDOM="DE"
+            dest: /mnt/etc/conf.d/wireless-regdom
