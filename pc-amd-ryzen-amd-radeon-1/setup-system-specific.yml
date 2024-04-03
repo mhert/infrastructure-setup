@@ -1,0 +1,18 @@
+- hosts: pc-amd-ryzen-amd-radeon-1
+  tasks:
+    - name: Install system specific packages
+      shell: |
+        arch-chroot /mnt pacman -Sy --noconfirm bluez \
+                                                amdvlk \
+                                                bluez-utils \
+                                                lib32-amdvlk \
+                                                lib32-libva-mesa-driver \
+                                                lib32-mesa \
+                                                lib32-mesa-vdpau \
+                                                libva-mesa-driver \
+                                                mesa \
+                                                mesa-vdpau
+
+    - name: Configure bluetooth
+      block:
+        - shell: arch-chroot /mnt systemctl enable bluetooth
