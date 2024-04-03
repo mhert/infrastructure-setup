@@ -1,0 +1,76 @@
+- hosts: all
+  tasks:
+    - name: Install plasma-6 desktop packages
+      block:
+        - shell: |
+            arch-chroot /mnt pacman -Sy --noconfirm adobe-source-code-pro-fonts \
+                                                    adobe-source-sans-fonts \
+                                                    adobe-source-serif-fonts \
+                                                    breeze-gtk \
+                                                    kde-gtk-config \
+                                                    colord \
+                                                    colord-kde \
+                                                    cups \
+                                                    flatpak \
+                                                    flatpak-kcm \
+                                                    flatpak-xdg-utils \
+                                                    gutenprint \
+                                                    jdk-openjdk \
+                                                    pavucontrol \
+                                                    plasma-browser-integration \
+                                                    plasma-meta \
+                                                    sddm \
+                                                    ttf-dejavu \
+                                                    xdg-desktop-portal-kde
+        - shell: |
+            arch-chroot /mnt pacman -Sy --noconfirm cameractrls \
+                                                    cheese \
+                                                    firefox \
+                                                    firefox-developer-edition \
+                                                    gimp \
+                                                    kde-accessibility-meta  \
+                                                    kde-graphics-meta \
+                                                    kde-multimedia-meta \
+                                                    kde-network-meta \
+                                                    kde-office-meta \
+                                                    kde-sdk-meta \
+                                                    kde-system-meta \
+                                                    kde-utilities-meta \
+                                                    libreoffice-fresh \
+                                                    meld \
+                                                    okteta \
+                                                    qbittorrent \
+                                                    qcachegrind \
+                                                    qemu-full \
+                                                    qopenvpn \
+                                                    qpwgraph \
+                                                    signal-desktop \
+                                                    spotify-launcher \
+                                                    tesseract-data-deu \
+                                                    tk \
+                                                    v4l-utils \
+                                                    virt-manager \
+                                                    vlc \
+                                                    wine \
+                                                    wine-gecko \
+                                                    wine-mono \
+                                                    winetricks \
+                                                    yakuake
+        - shell: |
+            arch-chroot /mnt pacman -Sy --noconfirm dnsmasq \
+                                                    edk2-ovmf \
+                                                    libvirt \
+                                                    qemu-base
+
+    - name: Configure sddm
+      block:
+        - shell: arch-chroot /mnt systemctl enable sddm
+
+    - name: Configure cups
+      block:
+        - shell: arch-chroot /mnt systemctl enable cups
+
+    - name: Configure libvirt
+      block:
+        - shell: arch-chroot /mnt systemctl enable libvirtd
+        - shell: arch-chroot /mnt usermod -a -G libvirt,libvirt-qemu "{{ main_user_name }}"

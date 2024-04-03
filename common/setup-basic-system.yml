@@ -1,0 +1,343 @@
+- hosts: all
+  vars:
+    root_subvol_name: "{{ root_subvol_name_prefix }}{{ lookup('pipe', 'date +%Y-%m-%d') }}"
+  vars_prompt:
+    - name: root_password
+      prompt: Enter root_password
+      private: yes
+    - name: main_user_password
+      prompt: Enter main_user_password
+      private: yes
+
+  tasks:
+    - name: Cleanup
+      block:
+        - name: Umount /mnt/*
+          shell: umount /mnt/* || true
+        - name: Umount /mnt
+          shell: umount /mnt || true
+        - name: Sync partition table
+          shell: partprobe "{{ install_device }}"
+
+    - name: Setup root subvolume
+      block:
+        - name: Mount data partition
+          shell: mount "{{ system_decrypted_device }}" /mnt
+        - name: Create root subvol
+          shell: btrfs subvolume create "/mnt/{{ root_subvol_name }}"
+        - name: Umount data partition
+          shell: umount "{{ system_decrypted_device }}"
+
+    - name: Mount filesystems
+      block:
+        - shell: mount -o subvol="{{ root_subvol_name }}" "{{ system_decrypted_device }}" /mnt
+        - shell: mount --mkdir "{{ efi_device }}" /mnt/efi
+        - shell: mount --mkdir -o subvol="{{ home_subvol_name }}" "{{ system_decrypted_device }}" /mnt/home
+        - shell: mount --mkdir -o subvol="{{ swap_subvol_name }}" "{{ system_decrypted_device }}" /mnt/swap
+
+    - name: Get UUID for efi device
+      shell: blkid -s UUID -o value "{{ efi_device }}"
+      register: efi_uuid
+      changed_when: false
+
+    - name: Get UUID for system encrypted device
+      shell: blkid -s UUID -o value "{{ system_encrypted_device }}"
+      register: system_encrypted_uuid
+      changed_when: false
+
+    - name: Get UUID for data partition
+      shell: blkid -s UUID -o value "{{ system_decrypted_device }}"
+      register: system_decrypted_uuid
+      changed_when: false
+
+    - name: Get UUID for resume device
+      shell: findmnt -no UUID -T /mnt/swap
+      register: resume_uuid
+      changed_when: false
+
+    - name: Get resume_offset
+      shell: btrfs inspect-internal map-swapfile -r /mnt/swap/swapfile
+      register: resume_offset
+      changed_when: false
+
+    - name: Install packages
+      block:
+        - name: Base system
+          shell: printf "\n" | pacstrap -K /mnt
+        - name: Additional packages
+          shell:
+            arch-chroot /mnt pacman -Sy --noconfirm amd-ucode \
+                                                    apparmor \
+                                                    arch-install-scripts \
+                                                    base \
+                                                    base-devel \
+                                                    btrfs-progs \
+                                                    bzip2 \
+                                                    cifs-utils \
+                                                    cronie \
+                                                    curl \
+                                                    dbus-broker \
+                                                    dbus-broker-units \
+                                                    dkms \
+                                                    dmidecode \
+                                                    dnssec-tools \
+                                                    dosfstools \
+                                                    dracut \
+                                                    ecryptfs-utils \
+                                                    efibootmgr \
+                                                    efitools \
+                                                    ethtool \
+                                                    exfatprogs \
+                                                    f2fs-tools \
+                                                    fuse2 \
+                                                    fuse3 \
+                                                    fuseiso \
+                                                    fwupd \
+                                                    git \
+                                                    grml-zsh-config \
+                                                    hdparm \
+                                                    htop \
+                                                    inetutils \
+                                                    intel-ucode \
+                                                    linux \
+                                                    linux-docs \
+                                                    linux-firmware \
+                                                    linux-headers \
+                                                    lm_sensors \
+                                                    lshw \
+                                                    man-db \
+                                                    man-pages \
+                                                    nfs-utils \
+                                                    ntfs-3g \
+                                                    nmap \
+                                                    openssh \
+                                                    openvpn \
+                                                    p7zip \
+                                                    pacman-contrib \
+                                                    pipewire \
+                                                    pipewire-alsa \
+                                                    pipewire-audio \
+                                                    pipewire-jack \
+                                                    pipewire-pulse \
+                                                    powertop \
+                                                    python \
+                                                    python-pip \
+                                                    python-pipx \
+                                                    reflector \
+                                                    rng-tools \
+                                                    rsync \
+                                                    sshfs \
+                                                    sshpass \
+                                                    sudo \
+                                                    systemd \
+                                                    systemd-resolvconf \
+                                                    traceroute \
+                                                    thermald \
+                                                    tpm2-tools \
+                                                    unrar \
+                                                    unzip \
+                                                    usbutils \
+                                                    vim \
+                                                    wireplumber \
+                                                    wget \
+                                                    zip \
+                                                    zsh \
+                                                    ansible \
+                                                    docker \
+                                                    docker-buildx \
+                                                    docker-compose \
+                                                    ffmpeg \
+                                                    helm \
+                                                    kubectl \
+                                                    mariadb-clients \
+                                                    terraform
+
+    - name: Generate fstab
+      copy:
+        content: |
+          UUID={{ system_decrypted_uuid.stdout }} /     btrfs rw,relatime,ssd,space_cache=v2,subvol={{ root_subvol_name }} 0 1
+          UUID={{ system_decrypted_uuid.stdout }} /home btrfs rw,relatime,ssd,space_cache=v2,subvol={{ home_subvol_name }} 0 2
+          UUID={{ system_decrypted_uuid.stdout }} /swap btrfs rw,relatime,ssd,space_cache=v2,subvol={{ swap_subvol_name }} 0 2
+          /swap/swapfile none swap defaults 0 0
+        dest: /mnt/etc/fstab
+
+    - name: Configure hostname
+      copy:
+        content: "{{ hostname }}"
+        dest: /mnt/etc/hostname
+
+    - name: Configure local timezone
+      command: arch-chroot /mnt ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+
+    - name: Generate /etc/adjtime
+      command: arch-chroot /mnt hwclock --systohc
+
+    - name: Configure locales
+      block:
+        - name: Create locale.gen
+          copy:
+            content: |
+              en_US.UTF-8 UTF-8
+            dest: /mnt/etc/locale.gen
+        - name: Create locale.conf
+          copy:
+            content: |
+              LANG=en_US.UTF-8
+            dest: /mnt/etc/locale.conf
+        - name: Generate locales
+          shell: arch-chroot /mnt locale-gen
+
+    - name: Configure pacman
+      block:
+        - shell: echo "Include = /etc/pacman.d/*.conf" >> /mnt/etc/pacman.conf
+        - copy:
+            src: pacman/custom.conf
+            dest: /mnt/etc/pacman.d/custom.conf
+        - copy:
+            src: reflector/reflector.conf
+            dest: /mnt/etc/xdg/reflector/reflector.conf
+        - name: Setup pacman mirrors
+          shell: arch-chroot /mnt reflector --protocol https --ipv6 --country Austria,Belgium,Czechia,France,Germany,Luxembourg,Netherlands,Poland,Switzerland --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+        - name: Setup automatic pacman mirror update
+          shell: arch-chroot /mnt systemctl enable reflector.timer
+
+    - name: Upgrade system
+      shell: arch-chroot /mnt pacman -Syu
+
+    - name: Configure dracut
+      block:
+        - copy:
+            content: |
+              compress="zstd"
+              early_microcode="yes"
+              kernel_cmdline="rd.luks.uuid={{ system_encrypted_uuid.stdout }} rd.luks.name={{ system_encrypted_uuid.stdout }}=system rd.luks.options=discard root=UUID={{ system_decrypted_uuid.stdout }} rootflags=subvol=/{{ root_subvol_name }} resume=UUID={{ resume_uuid.stdout }} resume_offset={{ resume_offset.stdout }} lsm=landlock,lockdown,yama,apparmor,bpf"
+            dest: /mnt/etc/dracut.conf.d/myflags.conf
+        - block:
+          - shell: |
+              arch-chroot /mnt /bin/bash -c "su nobody -s /bin/bash -c \"git clone https://aur.archlinux.org/dracut-hook-uefi.git /tmp/dracut-hook-uefi && \
+                                                                          cd /tmp/dracut-hook-uefi && \
+                                                                          makepkg\" \ && \
+                                             cp /tmp/dracut-hook-uefi/dracut-hook-uefi-*.pkg.tar.zst /root/"
+          - shell: arch-chroot /mnt /bin/bash -c "pacman -U --noconfirm /root/dracut-hook-uefi-*.pkg.tar.zst"
+          - shell: rm -rf /mnt/tmp/dracut-hook-uefi* /mnt/root/dracut-hook-uefi*
+
+    - name: Setup pikaur
+      block:
+        - shell: |
+            arch-chroot /mnt pacman -S --asdeps --noconfirm pyalpm \
+                                                             python-build \
+                                                             python-hatchling \
+                                                             python-installer \
+                                                             python-markdown-it-py \
+                                                             python-setuptools
+        - shell: |
+            arch-chroot /mnt /bin/bash -c "su nobody -s /bin/bash -c \"git clone https://aur.archlinux.org/pikaur.git /tmp/pikaur && \
+                                                                        cd /tmp/pikaur && \
+                                                                        makepkg\" \ && \
+                                           cp /tmp/pikaur/pikaur-*.pkg.tar.zst /root/"
+        - shell: |
+            arch-chroot /mnt pacman -Rs --noconfirm python-build \
+                                                     python-hatchling \
+                                                     python-installer \
+                                                     python-markdown-it-py \
+                                                     python-setuptools
+
+        - shell: arch-chroot /mnt /bin/bash -c "pacman -U --noconfirm /root/pikaur-*.pkg.tar.zst"
+        - shell: rm -rf /mnt/tmp/pikaur* /mnt/root/pikaur*
+
+    - name: Install bootloader
+      shell: arch-chroot /mnt bootctl install --no-variables
+
+    - name: Configure root user
+      block:
+        - name: Set root user password
+          shell: arch-chroot /mnt /bin/bash -c "echo \"root:{{ root_password }}\" | chpasswd"
+        - name: Set root user shell
+          shell: arch-chroot /mnt chsh root -s /bin/zsh
+
+    - name: Configure main user
+      block:
+        - name: Create main user
+          shell: arch-chroot /mnt useradd -m -G wheel,docker,network -s /bin/zsh "{{ main_user_name }}"
+        - name: Set main user password
+          shell: arch-chroot /mnt /bin/bash -c "echo \"{{ main_user_name }}:{{ main_user_password }}\" | chpasswd"
+        - name: Add main user to sudoers
+          lineinfile:
+            dest: /mnt/etc/sudoers
+            regexp: '^\#\s*\%wheel ALL=\(ALL\:ALL\) NOPASSWD\: ALL$'
+            line: '%wheel ALL=(ALL:ALL) NOPASSWD: ALL'
+
+    - name: Configure pacman cache-clean
+      block:
+        - name: Clean pacman cache every week
+          shell: arch-chroot /mnt systemctl enable paccache.timer
+
+    - name: Configure systemd-resolved
+      block:
+        - shell: arch-chroot /mnt systemctl enable systemd-resolved
+        - shell: ln -sf /run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
+        - shell: mkdir -p /mnt/etc/systemd/resolved.conf.d
+
+    - name: Configure systemd-resolved dnssec
+      copy:
+        content: |
+          [Resolve]
+          DNSSEC=allow-downgrade
+        dest: /mnt/etc/systemd/resolved.conf.d/dnssec.conf
+
+    - name: Configure systemd-networkd
+      shell: arch-chroot /mnt systemctl enable systemd-networkd
+
+    - name: Configure rngd
+      shell: arch-chroot /mnt systemctl enable rngd
+
+    - name: Configure thermald
+      shell: arch-chroot /mnt systemctl enable thermald
+
+    - name: Configure systemd-networkd ethernet
+      block:
+        - copy:
+            content: |
+              [Match]
+              Type=ether
+              Driver=!veth
+              [Network]
+              DHCP=yes
+              IPv6PrivacyExtensions=true
+              [DHCPv4]
+              RouteMetric=1023
+              [IPv6AcceptRA]
+              RouteMetric=1023
+            dest: /mnt/etc/systemd/network/99-ether.network
+
+    - name: Configure systemd-networkd wifi
+      block:
+        - copy:
+            content: |
+              [Match]
+              Type=wlan
+              [Network]
+              DHCP=yes
+              IPv6PrivacyExtensions=true
+              IgnoreCarrierLoss=3s
+              [DHCPv4]
+              RouteMetric=1024
+              [IPv6AcceptRA]
+              RouteMetric=1024
+            dest: /mnt/etc/systemd/network/99-wlan.network
+
+    - name: Configure network interface names
+      block:
+        - command: arch-chroot /mnt ln -s /dev/null /etc/systemd/network/80-iwd.link
+        - copy:
+            content: |
+              [Match]
+              OriginalName=*
+              [Link]
+              NamePolicy=mac
+              MACAddressPolicy=persistent
+            dest: /mnt/etc/systemd/network/99-default.link
+
+    - name: Configure sshd
+      block:
+        - shell: arch-chroot /mnt systemctl enable sshd
