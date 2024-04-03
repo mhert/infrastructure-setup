@@ -1,0 +1,59 @@
+- hosts: laptop-thinkpad-p14s-gen3-1
+  vars_prompt:
+    - name: system_encrypted_device_password
+      prompt: Enter system_encrypted_device_password
+      private: yes
+
+  tasks:
+    - name: Cleanup
+      block:
+        - name: Close probably mounted partitions
+          shell: umount -R /mnt || true
+        - name: Wipe disk partition data
+          command: find "{{ install_device_dir }}" -wholename "{{ install_device }}*" -exec wipefs --force --all {} \;
+        - name: Sync partition table
+          command: partprobe "{{ install_device }}"
+
+    - name: Partition disk
+      block:
+        - name: Create new GPT
+          command: sgdisk -o "{{ install_device }}"
+        - name: Create efi partition
+          command: sgdisk -n "1:0:2GB" -t "1:ef00" "{{ install_device }}"
+        - name: Create system partition
+          command: sgdisk -n "2::600GB" -t "2:8300" "{{ install_device }}"
+        - name: Sync partition table
+          command: partprobe "{{ install_device }}"
+
+    - name: Encrypt partitions
+      block:
+        - name: Encrypt system partition
+          luks_device:
+            device: "{{ system_encrypted_device }}"
+            passphrase: "{{ system_encrypted_device_password }}"
+            type: luks2
+            name: "{{ system_decrypted_device_name }}"
+            cipher: aes-xts-plain64
+            keysize: 512
+            hash: sha512
+            pbkdf:
+              iteration_time: 2
+            persistent: true
+            perf_no_read_workqueue: true
+            perf_no_write_workqueue: true
+            state: opened
+
+    - name: Format partitions
+      block:
+        - name: Format efi partition
+          command: mkfs.vfat -n efi -F32 "{{ efi_device }}"
+        - name: Format decrypted data partition
+          command: mkfs.btrfs -f -L system "{{ system_decrypted_device }}"
+
+    - name: Create subvolumes on data partition
+      block:
+        - shell: mount "{{ system_decrypted_device }}" /mnt
+        - shell: btrfs subvolume create "/mnt/{{ home_subvol_name }}"
+        - shell: btrfs subvolume create "/mnt/{{ swap_subvol_name }}"
+        - shell: btrfs filesystem mkswapfile --size {{ swap_size }} "/mnt/{{ swap_subvol_name }}/swapfile"
+        - shell: umount "{{ system_decrypted_device }}"
