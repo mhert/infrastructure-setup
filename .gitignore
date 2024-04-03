@@ -1,0 +1,2 @@
+# Machine-specific inventory (disks, hostnames, connection settings); see inventory.yml.example
+inventory.yml
