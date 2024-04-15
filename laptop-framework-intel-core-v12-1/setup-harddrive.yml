@@ -22,8 +22,6 @@
           command: sgdisk -n "1:0:2GB" -t "1:ef00" "{{ install_device }}"
         - name: Create system partition
           command: sgdisk -n "2::2400GB" -t "2:8300" "{{ install_device }}"
-        - name: Create windows partition
-          command: sgdisk -n "3::" -t "2:8300" "{{ install_device }}"
         - name: Sync partition table
           command: partprobe "{{ install_device }}"
 
