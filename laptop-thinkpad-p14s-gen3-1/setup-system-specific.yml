@@ -25,6 +25,10 @@
       block:
         - shell: arch-chroot /mnt systemctl enable bluetooth
 
+    - name: Configure wifi
+      block:
+        - shell: arch-chroot /mnt systemctl enable iwd
+
     - name: Configure wireless-regdb
       block:
         - copy:
