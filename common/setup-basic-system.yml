@@ -341,3 +341,7 @@
     - name: Configure sshd
       block:
         - shell: arch-chroot /mnt systemctl enable sshd
+
+    - name: Configure docker
+      block:
+        - shell: arch-chroot /mnt systemctl enable docker
