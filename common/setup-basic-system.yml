@@ -93,6 +93,7 @@
                                                     fuse3 \
                                                     fuseiso \
                                                     fwupd \
+                                                    gdisk \
                                                     git \
                                                     grml-zsh-config \
                                                     hdparm \
@@ -129,8 +130,10 @@
                                                     sshfs \
                                                     sshpass \
                                                     sudo \
+                                                    stress \
                                                     systemd \
                                                     systemd-resolvconf \
+                                                    s-tui \
                                                     traceroute \
                                                     thermald \
                                                     tpm2-tools \
