@@ -111,6 +111,7 @@
                                                     nfs-utils \
                                                     ntfs-3g \
                                                     nmap \
+                                                    ntp \
                                                     openssh \
                                                     openvpn \
                                                     p7zip \
@@ -296,6 +297,9 @@
 
     - name: Configure thermald
       shell: arch-chroot /mnt systemctl enable thermald
+
+    - name: Configure ntpd
+      shell: arch-chroot /mnt systemctl enable ntpdate
 
     - name: Configure systemd-networkd ethernet
       block:
