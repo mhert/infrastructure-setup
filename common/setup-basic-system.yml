@@ -299,7 +299,7 @@
       shell: arch-chroot /mnt systemctl enable thermald
 
     - name: Configure ntpd
-      shell: arch-chroot /mnt systemctl enable ntpdate
+      shell: arch-chroot /mnt systemctl enable systemd-timesyncd
 
     - name: Configure systemd-networkd ethernet
       block:
