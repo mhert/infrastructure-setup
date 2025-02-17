@@ -92,6 +92,7 @@
                                                     ethtool \
                                                     exfatprogs \
                                                     f2fs-tools \
+                                                    fscrypt \
                                                     fuse2 \
                                                     fuse3 \
                                                     fuseiso \
@@ -100,9 +101,11 @@
                                                     git \
                                                     grml-zsh-config \
                                                     hdparm \
+                                                    hexedit \
                                                     htop \
                                                     inetutils \
                                                     intel-ucode \
+                                                    iotop \
                                                     linux \
                                                     linux-docs \
                                                     linux-firmware \
@@ -131,6 +134,8 @@
                                                     reflector \
                                                     rng-tools \
                                                     rsync \
+                                                    rustup \
+                                                    screen \
                                                     sshfs \
                                                     sshpass \
                                                     sudo \
@@ -139,13 +144,16 @@
                                                     systemd-resolvconf \
                                                     systemd-ukify \
                                                     s-tui \
+                                                    testdisk \
                                                     traceroute \
                                                     thermald \
                                                     tpm2-tools \
+                                                    udftools \
                                                     unrar \
                                                     unzip \
                                                     usbutils \
                                                     vim \
+                                                    wireguard-tools \
                                                     wireplumber \
                                                     wget \
                                                     zip \
