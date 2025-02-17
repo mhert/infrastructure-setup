@@ -1,0 +1,31 @@
+- hosts: laptop-dell-xps-13-7390-1
+  tasks:
+    - name: Install system specific packages
+      shell: |
+        arch-chroot /mnt pacman -Sy --noconfirm bluez \
+                                                bluez-utils \
+                                                intel-compute-runtime \
+                                                intel-gpu-tools \
+                                                intel-media-driver \
+                                                iwd \
+                                                lib32-libvdpau \
+                                                lib32-vulkan-intel \
+                                                libvdpau \
+                                                libvdpau-va-gl \
+                                                vulkan-intel \
+                                                wireless-regdb
+
+    - name: Configure bluetooth
+      block:
+        - shell: arch-chroot /mnt systemctl enable bluetooth
+
+    - name: Configure wifi
+      block:
+        - shell: arch-chroot /mnt systemctl enable iwd
+
+    - name: Configure wireless-regdb
+      block:
+        - copy:
+            content: |
+              WIRELESS_REGDOM="DE"
+            dest: /mnt/etc/conf.d/wireless-regdom

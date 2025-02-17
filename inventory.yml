@@ -62,3 +62,21 @@ all:
       swap_size: 32G
       hostname:
       main_user_name:
+
+    laptop-dell-xps-13-7390-1:
+      ansible_connection:
+      ansible_host:
+      ansible_user:
+      ansible_ssh_pass:
+      install_device_dir: /dev/
+      install_device: /dev/nvme0n1
+      efi_device: /dev/nvme0n1p1
+      system_encrypted_device: /dev/nvme0n1p2
+      system_decrypted_device_name: system
+      system_decrypted_device: /dev/mapper/system
+      root_subvol_name_prefix: "@root-"
+      home_subvol_name: "@home"
+      swap_subvol_name: "@swap"
+      swap_size: 32G
+      hostname:
+      main_user_name:
