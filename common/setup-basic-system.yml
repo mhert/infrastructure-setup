@@ -60,6 +60,9 @@
       register: resume_offset
       changed_when: false
 
+    - name: Prepare efi device
+      shell: mkdir -p /mnt/efi/EFI
+
     - name: Install packages
       block:
         - name: Base system
@@ -134,6 +137,7 @@
                                                     stress \
                                                     systemd \
                                                     systemd-resolvconf \
+                                                    systemd-ukify \
                                                     s-tui \
                                                     traceroute \
                                                     thermald \
@@ -206,24 +210,29 @@
           shell: arch-chroot /mnt systemctl enable reflector.timer
 
     - name: Upgrade system
-      shell: arch-chroot /mnt pacman -Syu
+      shell: arch-chroot /mnt pacman -Syu --noconfirm
 
-    - name: Configure dracut
+    - name: Configure unified kernel image generation
       block:
         - copy:
             content: |
               compress="zstd"
-              early_microcode="yes"
-              kernel_cmdline="rd.luks.uuid={{ system_encrypted_uuid.stdout }} rd.luks.name={{ system_encrypted_uuid.stdout }}=system rd.luks.options=discard root=UUID={{ system_decrypted_uuid.stdout }} rootflags=subvol=/{{ root_subvol_name }} resume=UUID={{ resume_uuid.stdout }} resume_offset={{ resume_offset.stdout }} lsm=landlock,lockdown,yama,apparmor,bpf"
             dest: /mnt/etc/dracut.conf.d/myflags.conf
+        - copy:
+            content: |
+              rd.luks.uuid={{ system_encrypted_uuid.stdout }} rd.luks.name={{ system_encrypted_uuid.stdout }}=system rd.luks.options=discard root=UUID={{ system_decrypted_uuid.stdout }} rootflags=subvol=/{{ root_subvol_name }} resume=UUID={{ resume_uuid.stdout }} resume_offset={{ resume_offset.stdout }} lsm=landlock,lockdown,yama,apparmor,bpf
+            dest: /mnt/etc/kernel/cmdline
         - block:
           - shell: |
-              arch-chroot /mnt /bin/bash -c "su nobody -s /bin/bash -c \"git clone https://aur.archlinux.org/dracut-hook-uefi.git /tmp/dracut-hook-uefi && \
-                                                                          cd /tmp/dracut-hook-uefi && \
+              arch-chroot /mnt /bin/bash -c "su nobody -s /bin/bash -c \"git clone https://aur.archlinux.org/dracut-ukify.git /tmp/dracut-ukify && \
+                                                                          cd /tmp/dracut-ukify && \
                                                                           makepkg\" \ && \
-                                             cp /tmp/dracut-hook-uefi/dracut-hook-uefi-*.pkg.tar.zst /root/"
-          - shell: arch-chroot /mnt /bin/bash -c "pacman -U --noconfirm /root/dracut-hook-uefi-*.pkg.tar.zst"
-          - shell: rm -rf /mnt/tmp/dracut-hook-uefi* /mnt/root/dracut-hook-uefi*
+                                             cp /tmp/dracut-ukify/dracut-ukify-*.pkg.tar.zst /root/"
+          - shell: arch-chroot /mnt /bin/bash -c "pacman -U --noconfirm /root/dracut-ukify-*.pkg.tar.zst"
+          - shell: rm -rf /mnt/root/dracut-ukify*
+        - block:
+          - name: Generate first uki # because the trigger didnt trigger yet
+            shell: arch-chroot /mnt  pacman -S --noconfirm linux
 
     - name: Setup pikaur
       block:
@@ -247,7 +256,7 @@
                                                      python-setuptools
 
         - shell: arch-chroot /mnt /bin/bash -c "pacman -U --noconfirm /root/pikaur-*.pkg.tar.zst"
-        - shell: rm -rf /mnt/tmp/pikaur* /mnt/root/pikaur*
+        - shell: rm -rf /mnt/root/pikaur*
 
     - name: Install bootloader
       shell: arch-chroot /mnt bootctl install --no-variables
