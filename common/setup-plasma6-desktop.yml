@@ -37,6 +37,8 @@
                                                     kde-system-meta \
                                                     kde-utilities-meta \
                                                     libreoffice-fresh \
+                                                    gcompris-qt \
+                                                    inkscape \
                                                     meld \
                                                     okteta \
                                                     qbittorrent \
@@ -46,6 +48,7 @@
                                                     qpwgraph \
                                                     signal-desktop \
                                                     spotify-launcher \
+                                                    steam \
                                                     tesseract-data-deu \
                                                     tk \
                                                     v4l-utils \
