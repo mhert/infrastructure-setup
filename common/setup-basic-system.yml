@@ -195,6 +195,10 @@
         - name: Generate locales
           shell: arch-chroot /mnt locale-gen
 
+    # Disable expiration of nobody account. Can be removed once we find a way of building packages without root
+    - name: Disable expiration of nobody account
+      command: arch-chroot /mnt chage -E -1 nobody
+
     - name: Configure pacman
       block:
         - shell: echo "Include = /etc/pacman.d/*.conf" >> /mnt/etc/pacman.conf
@@ -361,3 +365,7 @@
     - name: Configure docker
       block:
         - shell: arch-chroot /mnt systemctl enable docker
+
+    # Re-enable expiration of nobody account. Can be removed once we find a way of building packages without root
+    - name: Re-Enable expiration of nobody account
+      command: arch-chroot /mnt chage -E 1 nobody
