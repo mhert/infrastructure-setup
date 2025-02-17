@@ -163,8 +163,8 @@
     - name: Generate fstab
       copy:
         content: |
-          UUID={{ system_decrypted_uuid.stdout }} /     btrfs rw,relatime,ssd,space_cache=v2,subvol={{ root_subvol_name }} 0 1
-          UUID={{ system_decrypted_uuid.stdout }} /home btrfs rw,relatime,ssd,space_cache=v2,subvol={{ home_subvol_name }} 0 2
+          UUID={{ system_decrypted_uuid.stdout }} /     btrfs rw,relatime,ssd,space_cache=v2,compress=zstd,subvol={{ root_subvol_name }} 0 1
+          UUID={{ system_decrypted_uuid.stdout }} /home btrfs rw,relatime,ssd,space_cache=v2,compress=zstd,subvol={{ home_subvol_name }} 0 2
           UUID={{ system_decrypted_uuid.stdout }} /swap btrfs rw,relatime,ssd,space_cache=v2,subvol={{ swap_subvol_name }} 0 2
           /swap/swapfile none swap defaults 0 0
         dest: /mnt/etc/fstab
