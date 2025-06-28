@@ -28,20 +28,9 @@
     - name: Encrypt partitions
       block:
         - name: Encrypt system partition
-          luks_device:
-            device: "{{ system_encrypted_device }}"
-            passphrase: "{{ system_encrypted_device_password }}"
-            type: luks2
-            name: "{{ system_decrypted_device_name }}"
-            cipher: aes-xts-plain64
-            keysize: 512
-            hash: sha512
-            pbkdf:
-              iteration_time: 2
-            persistent: true
-            perf_no_read_workqueue: true
-            perf_no_write_workqueue: true
-            state: opened
+          shell: echo "{{ system_encrypted_device_password }}" | cryptsetup luksFormat -q --perf-no_read_workqueue --perf-no_write_workqueue "{{ system_encrypted_device }}"
+        - name: Decrypt system partition
+          shell: echo "{{ system_encrypted_device_password }}" | cryptsetup luksOpen -q "{{ system_encrypted_device }}" "{{ system_decrypted_device_name }}"
 
     - name: Format partitions
       block:
