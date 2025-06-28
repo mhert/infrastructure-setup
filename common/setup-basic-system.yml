@@ -118,6 +118,7 @@
                                                     ntfs-3g \
                                                     nmap \
                                                     ntp \
+                                                    nvme-cli \
                                                     openssh \
                                                     openvpn \
                                                     p7zip \
@@ -131,6 +132,7 @@
                                                     python \
                                                     python-pip \
                                                     python-pipx \
+                                                    pv \
                                                     reflector \
                                                     rng-tools \
                                                     rsync \
@@ -139,6 +141,7 @@
                                                     sshfs \
                                                     sshpass \
                                                     sudo \
+                                                    starship \
                                                     stress \
                                                     systemd \
                                                     systemd-resolvconf \
