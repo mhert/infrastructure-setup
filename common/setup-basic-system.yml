@@ -232,6 +232,7 @@
         - copy:
             content: |
               compress="zstd"
+              install_items+=" /etc/conf.d/rngd "
             dest: /mnt/etc/dracut.conf.d/myflags.conf
         - copy:
             content: |
