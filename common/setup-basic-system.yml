@@ -99,7 +99,6 @@
                                                     fwupd \
                                                     gdisk \
                                                     git \
-                                                    grml-zsh-config \
                                                     hdparm \
                                                     hexedit \
                                                     htop \
@@ -141,7 +140,6 @@
                                                     sshfs \
                                                     sshpass \
                                                     sudo \
-                                                    starship \
                                                     stress \
                                                     systemd \
                                                     systemd-resolvconf \
@@ -161,6 +159,10 @@
                                                     wget \
                                                     zip \
                                                     zsh \
+                                                    grml-zsh-config \
+                                                    starship \
+                                                    zoxide \
+                                                    fzf \
                                                     ansible \
                                                     docker \
                                                     docker-buildx \
