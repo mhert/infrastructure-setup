@@ -6,12 +6,9 @@
                                                 amdvlk \
                                                 bluez-utils \
                                                 lib32-amdvlk \
-                                                lib32-libva-mesa-driver \
                                                 lib32-mesa \
-                                                lib32-mesa-vdpau \
                                                 libva-mesa-driver \
-                                                mesa \
-                                                mesa-vdpau
+                                                mesa
 
     - name: Configure bluetooth
       block:

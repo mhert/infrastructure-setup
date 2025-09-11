@@ -9,10 +9,7 @@
                                                 intel-gpu-tools \
                                                 intel-media-driver \
                                                 iwd \
-                                                lib32-libvdpau \
                                                 lib32-vulkan-intel \
-                                                libvdpau \
-                                                libvdpau-va-gl \
                                                 vulkan-intel \
                                                 wireless-regdb
 
