@@ -36,7 +36,17 @@ ansible-playbook common/setup-plasma6-desktop.yml -i inventory.yml --limit lapto
 ## Additional packages
 
 ### AUR
-
-- `ttf-ms-win11-auto`
 - `ausweisapp2`
+- `claude-code`
 - `cnrdrvcups-lb-bin` and `libjpeg6-turbo`
+- `geekbench`
+- `google-chrome`
+- `jetbrains-toolbox`
+- `joplin-bin`
+- `lmstudio-beta`
+- `masterpdfeditor-free`
+- `openaudible-bin`
+- `slack-desktop`
+- `teams-for-linux-bin`
+- `ttf-ms-win11-auto`
+- `visual-studio-code-bin`
