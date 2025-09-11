@@ -10,12 +10,9 @@
                                                 intel-media-driver \
                                                 iio-sensor-proxy \
                                                 iwd \
-                                                lib32-libvdpau \
                                                 lib32-mesa \
                                                 lib32-vulkan-intel \
                                                 libva-utils \
-                                                libvdpau \
-                                                libvdpau-va-gl \
                                                 mesa \
                                                 sof-firmware \
                                                 vpl-gpu-rt \
