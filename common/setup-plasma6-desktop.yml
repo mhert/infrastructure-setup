@@ -43,7 +43,6 @@
                                                     okteta \
                                                     qbittorrent \
                                                     qcachegrind \
-                                                    qemu-full \
                                                     qopenvpn \
                                                     qpwgraph \
                                                     signal-desktop \
@@ -60,10 +59,9 @@
                                                     winetricks \
                                                     yakuake
         - shell: |
-            arch-chroot /mnt pacman -Sy --noconfirm dnsmasq \
-                                                    edk2-ovmf \
-                                                    libvirt \
-                                                    qemu-base
+            arch-chroot /mnt pacman -Sy --noconfirm virtualbox \
+                                                    virtualbox-host-modules-arch \
+                                                    virtualbox-guest-iso
 
     - name: Configure sddm
       block:
