@@ -128,6 +128,7 @@
                                                     pipewire-jack \
                                                     pipewire-pulse \
                                                     powertop \
+                                                    power-profiles-daemon \
                                                     python \
                                                     python-pip \
                                                     python-pipx \
@@ -324,6 +325,9 @@
 
     - name: Configure thermald
       shell: arch-chroot /mnt systemctl enable thermald
+
+    - name: Configure power-profiles-daemon
+      shell: arch-chroot /mnt systemctl enable power-profiles-daemon
 
     - name: Configure ntpd
       shell: arch-chroot /mnt systemctl enable systemd-timesyncd
