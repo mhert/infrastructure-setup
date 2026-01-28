@@ -105,6 +105,7 @@
                                                     inetutils \
                                                     intel-ucode \
                                                     iotop \
+                                                    kmscon \
                                                     linux \
                                                     linux-docs \
                                                     linux-firmware \
@@ -331,6 +332,12 @@
 
     - name: Configure ntpd
       shell: arch-chroot /mnt systemctl enable systemd-timesyncd
+
+    - name: Configure terminal emulator
+      block:
+        - shell: arch-chroot /mnt systemctl disable getty@tty1.service
+        - shell: arch-chroot /mnt systemctl enable kmsconvt@tty1.service
+        - shell: arch-chroot /mnt ln -s '/usr/lib/systemd/system/kmsconvt@.service' '/etc/systemd/system/autovt@.service'
 
     - name: Configure systemd-networkd ethernet
       block:
