@@ -23,7 +23,6 @@
                                                     xdg-desktop-portal-kde
         - shell: |
             arch-chroot /mnt pacman -Sy --noconfirm cameractrls \
-                                                    cheese \
                                                     firefox \
                                                     firefox-developer-edition \
                                                     gimp \
@@ -73,4 +72,3 @@
     - name: Configure libvirt
       block:
         - shell: arch-chroot /mnt systemctl enable libvirtd
-        - shell: arch-chroot /mnt usermod -a -G libvirt,libvirt-qemu "{{ main_user_name }}"
