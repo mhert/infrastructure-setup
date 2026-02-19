@@ -19,7 +19,6 @@
                                                     pavucontrol \
                                                     plasma-browser-integration \
                                                     plasma-meta \
-                                                    sddm \
                                                     ttf-dejavu \
                                                     xdg-desktop-portal-kde
         - shell: |
@@ -63,9 +62,9 @@
                                                     virtualbox-host-modules-arch \
                                                     virtualbox-guest-iso
 
-    - name: Configure sddm
+    - name: Configure plasma-login-manager
       block:
-        - shell: arch-chroot /mnt systemctl enable sddm
+        - shell: arch-chroot /mnt systemctl enable plasmalogin
 
     - name: Configure cups
       block:
