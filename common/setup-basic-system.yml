@@ -5,9 +5,6 @@
     - name: root_password
       prompt: Enter root_password
       private: yes
-    - name: main_user_password
-      prompt: Enter main_user_password
-      private: yes
 
   tasks:
     - name: Cleanup
@@ -288,13 +285,12 @@
         - name: Set root user shell
           shell: arch-chroot /mnt chsh root -s /bin/zsh
 
-    - name: Configure main user
+
+    # Don't create main user - this will be manually via homectl
+
+    - name: Configure sudo
       block:
-        - name: Create main user
-          shell: arch-chroot /mnt useradd -m -G wheel,docker,network -s /bin/zsh "{{ main_user_name }}"
-        - name: Set main user password
-          shell: arch-chroot /mnt /bin/bash -c "echo \"{{ main_user_name }}:{{ main_user_password }}\" | chpasswd"
-        - name: Add main user to sudoers
+        - name: Add wheel group to sudoers
           lineinfile:
             dest: /mnt/etc/sudoers
             regexp: '^\#\s*\%wheel ALL=\(ALL\:ALL\) NOPASSWD\: ALL$'
@@ -338,6 +334,9 @@
         - shell: arch-chroot /mnt systemctl disable getty@tty1.service
         - shell: arch-chroot /mnt systemctl enable kmsconvt@tty1.service
         - shell: arch-chroot /mnt ln -s '/usr/lib/systemd/system/kmsconvt@.service' '/etc/systemd/system/autovt@.service'
+
+    - name: Configure systemd-homed
+      shell: arch-chroot /mnt systemctl enable systemd-homed
 
     - name: Configure systemd-networkd ethernet
       block:
