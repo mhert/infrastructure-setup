@@ -8,6 +8,7 @@
                                                 intel-compute-runtime \
                                                 intel-gpu-tools \
                                                 intel-media-driver \
+                                                intel-ucode \
                                                 iio-sensor-proxy \
                                                 iwd \
                                                 lib32-mesa \
@@ -15,6 +16,7 @@
                                                 libva-utils \
                                                 mesa \
                                                 sof-firmware \
+                                                thermald \
                                                 vpl-gpu-rt \
                                                 vulkan-intel \
                                                 wireless-regdb
@@ -28,6 +30,9 @@
       copy:
         src: etc/modprobe.d/i915.conf
         dest: /mnt/etc/modprobe.d/i915.conf
+
+    - name: Configure thermald
+      shell: arch-chroot /mnt systemctl enable thermald
 
     - name: Configure bluetooth
       block:
