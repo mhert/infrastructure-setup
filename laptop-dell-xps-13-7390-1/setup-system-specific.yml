@@ -7,10 +7,15 @@
                                                 intel-compute-runtime \
                                                 intel-gpu-tools \
                                                 intel-media-driver \
+                                                intel-ucode \
                                                 iwd \
                                                 lib32-vulkan-intel \
+                                                thermald \
                                                 vulkan-intel \
                                                 wireless-regdb
+
+    - name: Configure thermald
+      shell: arch-chroot /mnt systemctl enable thermald
 
     - name: Configure bluetooth
       block:

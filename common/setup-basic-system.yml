@@ -63,11 +63,10 @@
     - name: Install packages
       block:
         - name: Base system
-          shell: printf "\n" | pacstrap -K /mnt
+          shell: printf "\n" | pacstrap -K /mnt base
         - name: Additional packages
           shell:
-            arch-chroot /mnt pacman -Sy --noconfirm amd-ucode \
-                                                    apparmor \
+            arch-chroot /mnt pacman -Sy --noconfirm apparmor \
                                                     arch-install-scripts \
                                                     base \
                                                     base-devel \
@@ -100,7 +99,6 @@
                                                     hexedit \
                                                     htop \
                                                     inetutils \
-                                                    intel-ucode \
                                                     iotop \
                                                     kmscon \
                                                     linux \
@@ -146,7 +144,6 @@
                                                     s-tui \
                                                     testdisk \
                                                     traceroute \
-                                                    thermald \
                                                     tpm2-tools \
                                                     udftools \
                                                     unrar \
@@ -237,7 +234,7 @@
             dest: /mnt/etc/dracut.conf.d/myflags.conf
         - copy:
             content: |
-              rd.luks.uuid={{ system_encrypted_uuid.stdout }} rd.luks.name={{ system_encrypted_uuid.stdout }}=system rd.luks.options=discard root=UUID={{ system_decrypted_uuid.stdout }} rootflags=subvol=/{{ root_subvol_name }} resume=UUID={{ resume_uuid.stdout }} resume_offset={{ resume_offset.stdout }} lsm=landlock,lockdown,yama,apparmor,bpf
+              rd.luks.uuid={{ system_encrypted_uuid.stdout }} rd.luks.name={{ system_encrypted_uuid.stdout }}={{ system_decrypted_device_name }} rd.luks.options=discard root=UUID={{ system_decrypted_uuid.stdout }} rootflags=subvol=/{{ root_subvol_name }} resume=UUID={{ resume_uuid.stdout }} resume_offset={{ resume_offset.stdout }} lsm=landlock,lockdown,yama,apparmor,bpf
             dest: /mnt/etc/kernel/cmdline
         - block:
           - shell: |
@@ -320,9 +317,6 @@
     - name: Configure rngd
       shell: arch-chroot /mnt systemctl enable rngd
 
-    - name: Configure thermald
-      shell: arch-chroot /mnt systemctl enable thermald
-
     - name: Configure power-profiles-daemon
       shell: arch-chroot /mnt systemctl enable power-profiles-daemon
 
@@ -388,7 +382,7 @@
 
     - name: Configure docker
       block:
-        - shell: arch-chroot /mnt systemctl enable docker
+        - shell: arch-chroot /mnt systemctl enable docker.socket
 
     # Re-enable expiration of nobody account. Can be removed once we find a way of building packages without root
     - name: Re-Enable expiration of nobody account
