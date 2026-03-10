@@ -21,6 +21,27 @@ all:
       swap_size: 64G
       hostname:
 
+    laptop-framework-amd-ryzen-ai-300-1:
+      ansible_connection: local
+      ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+      ansible_host:
+      ansible_user:
+      ansible_ssh_pass:
+      ansible_become:
+      ansible_become_user:
+      ansible_become_pass:
+      install_device_dir: /dev/
+      install_device: /dev/nvme0n1
+      efi_device: /dev/nvme0n1p1
+      system_encrypted_device: /dev/nvme0n1p2
+      system_decrypted_device_name: system-2
+      system_decrypted_device: /dev/mapper/system-2
+      root_subvol_name_prefix: "@root-"
+      home_subvol_name: "@home"
+      swap_subvol_name: "@swap"
+      swap_size: 128G
+      hostname:
+
     laptop-thinkpad-p14s-gen3-1:
       ansible_connection:
       ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
