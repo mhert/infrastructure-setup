@@ -6,6 +6,15 @@ ansible-playbook common/setup-basic-system.yml -i inventory.yml --limit laptop-f
 ansible-playbook laptop-framework-intel-core-v12-1/setup-system-specific.yml -i inventory.yml --limit laptop-framework-intel-core-v12-1
 ansible-playbook common/setup-plasma6-desktop.yml -i inventory.yml --limit laptop-framework-intel-core-v12-1
 ```
+## Laptop Framework AMD Ryzen AI 300
+
+```bash
+ansible-playbook laptop-framework-amd-ryzen-ai-300-1/setup-harddrive.yml -i inventory.yml --limit laptop-framework-amd-ryzen-ai-300-1
+ansible-playbook common/setup-basic-system.yml -i inventory.yml --limit laptop-framework-amd-ryzen-ai-300-1
+ansible-playbook laptop-framework-amd-ryzen-ai-300-1/setup-system-specific.yml -i inventory.yml --limit laptop-framework-amd-ryzen-ai-300-1
+ansible-playbook common/setup-plasma6-desktop.yml -i inventory.yml --limit laptop-framework-amd-ryzen-ai-300-1
+```
+
 ## Laptop Thinkpad P14s 3rd Generation
 
 ```bash
