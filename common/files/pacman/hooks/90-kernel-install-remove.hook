@@ -1,0 +1,10 @@
+[Trigger]
+Type = Path
+Operation = Remove
+Target = usr/lib/modules/*/vmlinuz
+
+[Action]
+Description = Removing Unified Kernel Image...
+When = PreTransaction
+Exec = /bin/sh -c 'while read -r f; do kernel-install remove "$(basename "$(dirname "$f")")"; done'
+NeedsTargets
