@@ -197,6 +197,7 @@
           copy:
             content: |
               en_US.UTF-8 UTF-8
+              de_DE.UTF-8 UTF-8
             dest: /mnt/etc/locale.gen
         - name: Create locale.conf
           copy:
