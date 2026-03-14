@@ -1,0 +1,87 @@
+- hosts: all
+  tasks:
+    - name: Configure Secure Boot
+      block:
+        # Phase 1: Generate signing keys and configure signing
+        - name: Create ukify Secure Boot signing configuration
+          copy:
+            content: |
+              [UKI]
+              SecureBootPrivateKey=/var/lib/secure-boot-keys/secure-boot-private-key.pem
+              SecureBootCertificate=/var/lib/secure-boot-keys/secure-boot-certificate.pem
+              SecureBootSigningTool=systemd-sbsign
+              SignKernel=true
+            dest: /mnt/etc/kernel/uki.conf
+
+        - name: Generate Secure Boot signing keys (skip if already exist)
+          shell: arch-chroot /mnt ukify genkey --config /etc/kernel/uki.conf
+          args:
+            creates: /mnt/var/lib/secure-boot-keys/secure-boot-private-key.pem
+
+        - name: Regenerate UKI with Secure Boot signing
+          shell: arch-chroot /mnt pacman -S --noconfirm linux
+
+        # Phase 2: Sign the bootloader
+        - name: Sign systemd-boot for Secure Boot
+          shell: |
+            arch-chroot /mnt /usr/lib/systemd/systemd-sbsign sign \
+              --private-key /var/lib/secure-boot-keys/secure-boot-private-key.pem \
+              --certificate /var/lib/secure-boot-keys/secure-boot-certificate.pem \
+              --output /usr/lib/systemd/boot/efi/systemd-bootx64.efi.signed \
+              /usr/lib/systemd/boot/efi/systemd-bootx64.efi
+
+        - name: Update bootloader with signed version
+          shell: arch-chroot /mnt bootctl update
+
+        - name: Install systemd-boot Secure Boot signing pacman hook
+          block:
+            - file:
+                path: /mnt/etc/pacman.d/hooks
+                state: directory
+            - copy:
+                src: files/pacman/hooks/95-systemd-boot-sign.hook
+                dest: /mnt/etc/pacman.d/hooks/95-systemd-boot-sign.hook
+
+        # Phase 3: Prepare key enrollment with Microsoft certs
+        - name: Create GUID for Secure Boot key ownership
+          shell: uuidgen --random
+          register: sb_guid
+
+        - name: Download Microsoft UEFI certificates
+          shell: |
+            curl -Lo /mnt/var/tmp/MicCorUEFCA2023.crt "https://go.microsoft.com/fwlink/?linkid=2239776"
+            curl -Lo /mnt/var/tmp/MicCorUEFCA2011.crt "https://go.microsoft.com/fwlink/?linkid=321194"
+            curl -Lo /mnt/var/tmp/MicWinProPCA2011.crt "https://go.microsoft.com/fwlink/?linkid=321192"
+
+        - name: Create EFI signature lists and signed auth files
+          shell: |
+            arch-chroot /mnt /bin/bash -c '
+              cd /var/tmp && \
+              GUID="{{ sb_guid.stdout }}" && \
+              cert-to-efi-sig-list -g "$GUID" /var/lib/secure-boot-keys/secure-boot-certificate.pem db_custom.esl && \
+              cert-to-efi-sig-list -g 77fa9abd-0359-4d32-bd60-28f4e78f784b /var/tmp/MicCorUEFCA2023.crt db_ms2023.esl && \
+              cert-to-efi-sig-list -g 77fa9abd-0359-4d32-bd60-28f4e78f784b /var/tmp/MicCorUEFCA2011.crt db_ms2011.esl && \
+              cert-to-efi-sig-list -g 77fa9abd-0359-4d32-bd60-28f4e78f784b /var/tmp/MicWinProPCA2011.crt db_mswin.esl && \
+              cat db_custom.esl db_ms2023.esl db_ms2011.esl db_mswin.esl > db.esl && \
+              cert-to-efi-sig-list -g "$GUID" /var/lib/secure-boot-keys/secure-boot-certificate.pem PK.esl && \
+              cert-to-efi-sig-list -g "$GUID" /var/lib/secure-boot-keys/secure-boot-certificate.pem KEK.esl && \
+              sign-efi-sig-list -g "$GUID" -k /var/lib/secure-boot-keys/secure-boot-private-key.pem -c /var/lib/secure-boot-keys/secure-boot-certificate.pem PK PK.esl PK.auth && \
+              sign-efi-sig-list -g "$GUID" -k /var/lib/secure-boot-keys/secure-boot-private-key.pem -c /var/lib/secure-boot-keys/secure-boot-certificate.pem KEK KEK.esl KEK.auth && \
+              sign-efi-sig-list -g "$GUID" -k /var/lib/secure-boot-keys/secure-boot-private-key.pem -c /var/lib/secure-boot-keys/secure-boot-certificate.pem db db.esl db.auth
+            '
+
+        - name: Place auth files on ESP for auto-enrollment
+          block:
+            - file:
+                path: /mnt/efi/loader/keys/auto
+                state: directory
+            - shell: cp /mnt/var/tmp/PK.auth /mnt/var/tmp/KEK.auth /mnt/var/tmp/db.auth /mnt/efi/loader/keys/auto/
+
+        - name: Configure loader.conf for Secure Boot auto-enrollment
+          lineinfile:
+            path: /mnt/efi/loader/loader.conf
+            line: "secure-boot-enroll force"
+            create: yes
+
+        - name: Cleanup Secure Boot temporary files
+          shell: rm -f /mnt/var/tmp/Mic*.crt /mnt/var/tmp/*.esl /mnt/var/tmp/*.auth
