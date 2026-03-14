@@ -1,4 +1,4 @@
-- hosts: pc-amd-ryzen-amd-radeon-1
+- hosts: all
   vars_prompt:
     - name: system_encrypted_device_password
       prompt: Enter system_encrypted_device_password
@@ -21,16 +21,22 @@
         - name: Create efi partition
           command: sgdisk -n "1:0:2GB" -t "1:ef00" "{{ install_device }}"
         - name: Create system partition
-          command: sgdisk -n "2::" -t "2:8300" "{{ install_device }}"
+          command: sgdisk -n "2::{{ system_partition_size }}" -t "2:8300" "{{ install_device }}"
         - name: Sync partition table
           command: partprobe "{{ install_device }}"
 
     - name: Encrypt partitions
       block:
         - name: Encrypt system partition
-          shell: echo "{{ system_encrypted_device_password }}" | cryptsetup luksFormat -q --perf-no_read_workqueue --perf-no_write_workqueue "{{ system_encrypted_device }}"
+          shell: cryptsetup luksFormat -q --perf-no_read_workqueue --perf-no_write_workqueue "{{ system_encrypted_device }}"
+          args:
+            stdin: "{{ system_encrypted_device_password }}"
+          no_log: true
         - name: Decrypt system partition
-          shell: echo "{{ system_encrypted_device_password }}" | cryptsetup luksOpen -q "{{ system_encrypted_device }}" "{{ system_decrypted_device_name }}"
+          shell: cryptsetup luksOpen -q "{{ system_encrypted_device }}" "{{ system_decrypted_device_name }}"
+          args:
+            stdin: "{{ system_encrypted_device_password }}"
+          no_log: true
 
     - name: Format partitions
       block:
@@ -44,5 +50,6 @@
         - shell: mount "{{ system_decrypted_device }}" /mnt
         - shell: btrfs subvolume create "/mnt/@home"
         - shell: btrfs subvolume create "/mnt/@swap"
+        - shell: btrfs subvolume create "/mnt/@secure-boot-keys"
         - shell: btrfs filesystem mkswapfile --size {{ swap_size }} "/mnt/@swap/swapfile"
         - shell: umount "{{ system_decrypted_device }}"
