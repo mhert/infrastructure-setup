@@ -1,7 +1,7 @@
 all:
   hosts:
     laptop-framework-intel-core-v12-1:
-      ansible_connection:
+      ansible_connection: local
       ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
       ansible_host:
       ansible_user:
@@ -16,6 +16,9 @@ all:
       system_decrypted_device_name: system
       system_decrypted_device: /dev/mapper/system
       swap_size: 64G
+      system_partition_size: "3TB"
+      cryptsetup_format_options: "--sector-size 4096 --cipher aes-xts-plain64 --key-size 512 --hash sha512"
+      cryptsetup_open_options: "--perf-no_read_workqueue --perf-no_write_workqueue --allow-discards --persistent"
       hostname:
 
     laptop-framework-amd-ryzen-ai-300-1:
@@ -28,12 +31,15 @@ all:
       ansible_become_user:
       ansible_become_pass:
       install_device_dir: /dev/
-      install_device: /dev/nvme0n1
-      efi_device: /dev/nvme0n1p1
-      system_encrypted_device: /dev/nvme0n1p2
+      install_device: /dev/nvme1n1
+      efi_device: /dev/nvme1n1p1
+      system_encrypted_device: /dev/nvme1n1p2
       system_decrypted_device_name: system-2
       system_decrypted_device: /dev/mapper/system-2
       swap_size: 128G
+      system_partition_size: "3TB"
+      cryptsetup_format_options: "--sector-size 4096 --cipher aes-xts-plain64 --key-size 512 --hash sha512"
+      cryptsetup_open_options: "--perf-no_read_workqueue --perf-no_write_workqueue --allow-discards --persistent"
       hostname:
 
     laptop-thinkpad-p14s-gen3-1:
@@ -52,6 +58,9 @@ all:
       system_decrypted_device_name: system
       system_decrypted_device: /dev/mapper/system
       swap_size: 48G
+      system_partition_size: "600GB"
+      cryptsetup_format_options: "--sector-size 4096 --cipher aes-xts-plain64 --key-size 512 --hash sha512"
+      cryptsetup_open_options: "--perf-no_read_workqueue --perf-no_write_workqueue --allow-discards --persistent"
       hostname:
 
     pc-amd-ryzen-amd-radeon-1:
@@ -70,6 +79,9 @@ all:
       system_decrypted_device_name: system
       system_decrypted_device: /dev/mapper/system
       swap_size: 32G
+      system_partition_size: ""
+      cryptsetup_format_options: "--sector-size 4096 --cipher aes-xts-plain64 --key-size 512 --hash sha512"
+      cryptsetup_open_options: "--perf-no_read_workqueue --perf-no_write_workqueue --allow-discards --persistent"
       hostname:
 
     laptop-dell-xps-13-7390-1:
@@ -85,4 +97,7 @@ all:
       system_decrypted_device_name: system
       system_decrypted_device: /dev/mapper/system
       swap_size: 32G
+      system_partition_size: ""
+      cryptsetup_format_options: "--sector-size 4096 --cipher aes-xts-plain64 --key-size 512 --hash sha512"
+      cryptsetup_open_options: "--perf-no_read_workqueue --perf-no_write_workqueue --allow-discards --persistent"
       hostname:
