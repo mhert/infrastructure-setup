@@ -1,6 +1,6 @@
 - hosts: all
   vars:
-    root_subvol_name: "{{ root_subvol_name_prefix }}{{ lookup('pipe', 'date +%Y-%m-%d') }}"
+    root_subvol_name: "@root-{{ lookup('pipe', 'date +%Y-%m-%d') }}"
   vars_prompt:
     - name: root_password
       prompt: Enter root_password
@@ -29,8 +29,9 @@
       block:
         - shell: mount -o subvol="{{ root_subvol_name }}" "{{ system_decrypted_device }}" /mnt
         - shell: mount --mkdir "{{ efi_device }}" /mnt/efi
-        - shell: mount --mkdir -o subvol="{{ home_subvol_name }}" "{{ system_decrypted_device }}" /mnt/home
-        - shell: mount --mkdir -o subvol="{{ swap_subvol_name }}" "{{ system_decrypted_device }}" /mnt/swap
+        - shell: mount --mkdir -o subvol="@home" "{{ system_decrypted_device }}" /mnt/home
+        - shell: mount --mkdir -o subvol="@swap" "{{ system_decrypted_device }}" /mnt/swap
+        - shell: mount --mkdir -o subvol="@secure-boot-keys" "{{ system_decrypted_device }}" /mnt/var/lib/secure-boot-keys
 
     - name: Get UUID for efi device
       shell: blkid -s UUID -o value "{{ efi_device }}"
@@ -173,8 +174,9 @@
       copy:
         content: |
           UUID={{ system_decrypted_uuid.stdout }} /     btrfs rw,noatime,ssd,discard=async,space_cache=v2,compress=zstd:1,subvol={{ root_subvol_name }} 0 1
-          UUID={{ system_decrypted_uuid.stdout }} /home btrfs rw,noatime,ssd,discard=async,space_cache=v2,compress=zstd:1,subvol={{ home_subvol_name }} 0 2
-          UUID={{ system_decrypted_uuid.stdout }} /swap btrfs rw,noatime,ssd,discard=async,space_cache=v2,subvol={{ swap_subvol_name }} 0 2
+          UUID={{ system_decrypted_uuid.stdout }} /home btrfs rw,noatime,ssd,discard=async,space_cache=v2,compress=zstd:1,subvol=@home 0 2
+          UUID={{ system_decrypted_uuid.stdout }} /swap btrfs rw,noatime,ssd,discard=async,space_cache=v2,subvol=@swap 0 2
+          UUID={{ system_decrypted_uuid.stdout }} /var/lib/secure-boot-keys btrfs rw,noatime,ssd,discard=async,space_cache=v2,compress=zstd:1,subvol=@secure-boot-keys 0 2
           /swap/swapfile none swap defaults 0 0
         dest: /mnt/etc/fstab
 
@@ -204,13 +206,11 @@
         - name: Generate locales
           shell: arch-chroot /mnt locale-gen
 
-    # Disable expiration of nobody account. Can be removed once we find a way of building packages without root
-    - name: Disable expiration of nobody account
-      command: arch-chroot /mnt chage -E -1 nobody
-
     - name: Configure pacman
       block:
-        - shell: echo "Include = /etc/pacman.d/*.conf" >> /mnt/etc/pacman.conf
+        - lineinfile:
+            path: /mnt/etc/pacman.conf
+            line: "Include = /etc/pacman.d/*.conf"
         - copy:
             src: pacman/custom.conf
             dest: /mnt/etc/pacman.d/custom.conf
@@ -236,41 +236,24 @@
             content: |
               rd.luks.uuid={{ system_encrypted_uuid.stdout }} rd.luks.name={{ system_encrypted_uuid.stdout }}={{ system_decrypted_device_name }} rd.luks.options=discard root=UUID={{ system_decrypted_uuid.stdout }} rootflags=subvol=/{{ root_subvol_name }} resume=UUID={{ resume_uuid.stdout }} resume_offset={{ resume_offset.stdout }} lsm=landlock,lockdown,yama,apparmor,bpf
             dest: /mnt/etc/kernel/cmdline
-        - block:
-          - shell: |
-              arch-chroot /mnt /bin/bash -c "su nobody -s /bin/bash -c \"git clone https://aur.archlinux.org/dracut-ukify.git /tmp/dracut-ukify && \
-                                                                          cd /tmp/dracut-ukify && \
-                                                                          makepkg\" \ && \
-                                             cp /tmp/dracut-ukify/dracut-ukify-*.pkg.tar.zst /root/"
-          - shell: arch-chroot /mnt /bin/bash -c "pacman -U --noconfirm /root/dracut-ukify-*.pkg.tar.zst"
-          - shell: rm -rf /mnt/root/dracut-ukify*
-        - block:
-          - name: Generate first uki # because the trigger didnt trigger yet
-            shell: arch-chroot /mnt  pacman -S --noconfirm linux
-
-    - name: Setup pikaur
-      block:
-        - shell: |
-            arch-chroot /mnt pacman -S --asdeps --noconfirm pyalpm \
-                                                             python-build \
-                                                             python-hatchling \
-                                                             python-installer \
-                                                             python-markdown-it-py \
-                                                             python-setuptools
-        - shell: |
-            arch-chroot /mnt /bin/bash -c "su nobody -s /bin/bash -c \"git clone https://aur.archlinux.org/pikaur.git /tmp/pikaur && \
-                                                                        cd /tmp/pikaur && \
-                                                                        makepkg\" \ && \
-                                           cp /tmp/pikaur/pikaur-*.pkg.tar.zst /root/"
-        - shell: |
-            arch-chroot /mnt pacman -Rs --noconfirm python-build \
-                                                     python-hatchling \
-                                                     python-installer \
-                                                     python-markdown-it-py \
-                                                     python-setuptools
-
-        - shell: arch-chroot /mnt /bin/bash -c "pacman -U --noconfirm /root/pikaur-*.pkg.tar.zst"
-        - shell: rm -rf /mnt/root/pikaur*
+        - copy:
+            content: |
+              layout=uki
+              initrd_generator=dracut
+            dest: /mnt/etc/kernel/install.conf
+        - name: Install kernel-install pacman hooks
+          block:
+            - file:
+                path: /mnt/etc/pacman.d/hooks
+                state: directory
+            - copy:
+                src: pacman/hooks/90-kernel-install.hook
+                dest: /mnt/etc/pacman.d/hooks/90-kernel-install.hook
+            - copy:
+                src: pacman/hooks/90-kernel-install-remove.hook
+                dest: /mnt/etc/pacman.d/hooks/90-kernel-install-remove.hook
+        - name: Generate first UKI
+          shell: arch-chroot /mnt pacman -S --noconfirm linux
 
     - name: Install bootloader
       shell: arch-chroot /mnt bootctl install --no-variables
@@ -278,7 +261,10 @@
     - name: Configure root user
       block:
         - name: Set root user password
-          shell: arch-chroot /mnt /bin/bash -c "echo \"root:{{ root_password }}\" | chpasswd"
+          shell: arch-chroot /mnt chpasswd
+          args:
+            stdin: "root:{{ root_password }}"
+          no_log: true
         - name: Set root user shell
           shell: arch-chroot /mnt chsh root -s /bin/zsh
 
@@ -383,7 +369,3 @@
     - name: Configure docker
       block:
         - shell: arch-chroot /mnt systemctl enable docker.socket
-
-    # Re-enable expiration of nobody account. Can be removed once we find a way of building packages without root
-    - name: Re-Enable expiration of nobody account
-      command: arch-chroot /mnt chage -E 1 nobody

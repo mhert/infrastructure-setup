@@ -15,9 +15,6 @@ all:
       system_encrypted_device: /dev/nvme0n1p2
       system_decrypted_device_name: system
       system_decrypted_device: /dev/mapper/system
-      root_subvol_name_prefix: "@root-"
-      home_subvol_name: "@home"
-      swap_subvol_name: "@swap"
       swap_size: 64G
       hostname:
 
@@ -36,9 +33,6 @@ all:
       system_encrypted_device: /dev/nvme0n1p2
       system_decrypted_device_name: system-2
       system_decrypted_device: /dev/mapper/system-2
-      root_subvol_name_prefix: "@root-"
-      home_subvol_name: "@home"
-      swap_subvol_name: "@swap"
       swap_size: 128G
       hostname:
 
@@ -57,9 +51,6 @@ all:
       system_encrypted_device: /dev/nvme0n1p2
       system_decrypted_device_name: system
       system_decrypted_device: /dev/mapper/system
-      root_subvol_name_prefix: "@root-"
-      home_subvol_name: "@home"
-      swap_subvol_name: "@swap"
       swap_size: 48G
       hostname:
 
@@ -78,9 +69,6 @@ all:
       system_encrypted_device: /dev/nvme1n1p2
       system_decrypted_device_name: system
       system_decrypted_device: /dev/mapper/system
-      root_subvol_name_prefix: "@root-"
-      home_subvol_name: "@home"
-      swap_subvol_name: "@swap"
       swap_size: 32G
       hostname:
 
@@ -96,8 +84,5 @@ all:
       system_encrypted_device: /dev/nvme0n1p2
       system_decrypted_device_name: system
       system_decrypted_device: /dev/mapper/system
-      root_subvol_name_prefix: "@root-"
-      home_subvol_name: "@home"
-      swap_subvol_name: "@swap"
       swap_size: 32G
       hostname:

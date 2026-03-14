@@ -42,7 +42,7 @@
     - name: Create subvolumes on data partition
       block:
         - shell: mount "{{ system_decrypted_device }}" /mnt
-        - shell: btrfs subvolume create "/mnt/{{ home_subvol_name }}"
-        - shell: btrfs subvolume create "/mnt/{{ swap_subvol_name }}"
-        - shell: btrfs filesystem mkswapfile --size {{ swap_size }} "/mnt/{{ swap_subvol_name }}/swapfile"
+        - shell: btrfs subvolume create "/mnt/@home"
+        - shell: btrfs subvolume create "/mnt/@swap"
+        - shell: btrfs filesystem mkswapfile --size {{ swap_size }} "/mnt/@swap/swapfile"
         - shell: umount "{{ system_decrypted_device }}"
