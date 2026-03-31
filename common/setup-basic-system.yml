@@ -133,7 +133,6 @@
                                                     reflector \
                                                     rng-tools \
                                                     rsync \
-                                                    rustup \
                                                     screen \
                                                     sshfs \
                                                     sshpass \
@@ -156,6 +155,8 @@
                                                     wget \
                                                     zip \
                                                     zsh \
+                                                    jq \
+                                                    yq \
                                                     grml-zsh-config \
                                                     starship \
                                                     zoxide \
@@ -168,7 +169,16 @@
                                                     helm \
                                                     kubectl \
                                                     mariadb-clients \
-                                                    terraform
+                                                    github-cli \
+                                                    terraform \
+                                                    php \
+                                                    composer \
+                                                    nodejs \
+                                                    npm \
+                                                    pnpm \
+                                                    yarn \
+                                                    rustup \
+                                                    shellcheck
 
     - name: Generate fstab
       copy:
