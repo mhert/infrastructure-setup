@@ -14,6 +14,9 @@
         - name: Sync partition table
           command: partprobe "{{ install_device }}"
 
+    - name: Format SSD with 4096 byte sector size
+      command: nvme format --block-size=4096 "{{ install_device }}"
+
     - name: Partition disk
       block:
         - name: Create new GPT
@@ -28,12 +31,12 @@
     - name: Encrypt partitions
       block:
         - name: Encrypt system partition
-          shell: cryptsetup luksFormat -q --perf-no_read_workqueue --perf-no_write_workqueue "{{ system_encrypted_device }}"
+          shell: cryptsetup luksFormat -q {{ cryptsetup_format_options }} "{{ system_encrypted_device }}"
           args:
             stdin: "{{ system_encrypted_device_password }}"
           no_log: true
         - name: Decrypt system partition
-          shell: cryptsetup luksOpen -q "{{ system_encrypted_device }}" "{{ system_decrypted_device_name }}"
+          shell: cryptsetup luksOpen -q {{ cryptsetup_open_options }} "{{ system_encrypted_device }}" "{{ system_decrypted_device_name }}"
           args:
             stdin: "{{ system_encrypted_device_password }}"
           no_log: true
