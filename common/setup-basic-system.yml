@@ -18,12 +18,14 @@
         - name: Wait for udev to settle
           command: udevadm settle
 
-    - name: Setup root subvolume
+    - name: Setup subvolumes
       block:
         - name: Mount data partition
           shell: mount "{{ system_decrypted_device }}" /mnt
-        - name: Create root subvol
-          shell: btrfs subvolume create "/mnt/{{ root_subvol_name }}"
+        - name: Ensure root subvol exists
+          shell: btrfs subvolume show "/mnt/{{ root_subvol_name }}" >/dev/null 2>&1 || btrfs subvolume create "/mnt/{{ root_subvol_name }}"
+        - name: Ensure @secure-boot-keys subvol exists
+          shell: btrfs subvolume show "/mnt/@secure-boot-keys" >/dev/null 2>&1 || btrfs subvolume create "/mnt/@secure-boot-keys"
         - name: Umount data partition
           shell: umount "{{ system_decrypted_device }}"
 
