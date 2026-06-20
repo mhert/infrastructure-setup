@@ -2,7 +2,7 @@
   tasks:
     - name: Install system specific packages
       shell: |
-        arch-chroot /mnt pacman -Sy --noconfirm bluez \
+        arch-chroot /mnt pacman -S --noconfirm bluez \
                                                 bluez-utils \
                                                 intel-compute-runtime \
                                                 intel-gpu-tools \

@@ -2,7 +2,7 @@
   tasks:
     - name: Install system specific packages
       shell: |
-        arch-chroot /mnt pacman -Sy --noconfirm amdgpu_top \
+        arch-chroot /mnt pacman -S --noconfirm amdgpu_top \
                                                 amd-ucode \
                                                 bluez \
                                                 bluez-utils \

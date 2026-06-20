@@ -3,7 +3,7 @@
     - name: Install plasma-6 desktop packages
       block:
         - shell: |
-            arch-chroot /mnt pacman -Sy --noconfirm adobe-source-code-pro-fonts \
+            arch-chroot /mnt pacman -S --noconfirm adobe-source-code-pro-fonts \
                                                     adobe-source-sans-fonts \
                                                     adobe-source-serif-fonts \
                                                     breeze-gtk \
@@ -22,7 +22,7 @@
                                                     ttf-dejavu \
                                                     xdg-desktop-portal-kde
         - shell: |
-            arch-chroot /mnt pacman -Sy --noconfirm cameractrls \
+            arch-chroot /mnt pacman -S --noconfirm cameractrls \
                                                     firefox \
                                                     firefox-developer-edition \
                                                     gimp \
@@ -57,7 +57,7 @@
                                                     winetricks \
                                                     yakuake
         - shell: |
-            arch-chroot /mnt pacman -Sy --noconfirm virtualbox \
+            arch-chroot /mnt pacman -S --noconfirm virtualbox \
                                                     virtualbox-host-modules-arch \
                                                     virtualbox-guest-iso
 

@@ -100,3 +100,13 @@ These AUR packages are not covered by the playbooks and need to be installed man
 - `teams-for-linux-bin`
 - `ttf-ms-win11-auto`
 - `visual-studio-code-bin`
+
+### Framework laptop (any model)
+
+- `framework-system` -- CLI for the Framework embedded controller: battery charge limit, fan curve, LEDs, firmware info. Talks to the in-tree `cros_ec` driver.
+
+### Framework AMD Ryzen AI 300 (NPU)
+
+The `amdxdna` driver and NPU firmware ship with the in-tree kernel and `linux-firmware`, so the device shows up out of the box. Userspace runtime for inference on the NPU is AUR-only:
+
+- `xdna-driver` -- XRT-based userspace runtime for the AMD XDNA NPU.

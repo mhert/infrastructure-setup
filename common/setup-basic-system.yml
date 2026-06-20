@@ -15,6 +15,8 @@
           shell: umount /mnt || true
         - name: Sync partition table
           shell: partprobe "{{ install_device }}"
+        - name: Wait for udev to settle
+          command: udevadm settle
 
     - name: Setup root subvolume
       block:
@@ -313,6 +315,9 @@
 
     - name: Configure rngd
       shell: arch-chroot /mnt systemctl enable rngd
+
+    - name: Configure apparmor
+      shell: arch-chroot /mnt systemctl enable apparmor
 
     - name: Configure power-profiles-daemon
       shell: arch-chroot /mnt systemctl enable power-profiles-daemon

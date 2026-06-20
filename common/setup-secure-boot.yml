@@ -49,9 +49,29 @@
 
         - name: Download Microsoft UEFI certificates
           shell: |
-            curl -Lo /mnt/var/tmp/MicCorUEFCA2023.crt "https://go.microsoft.com/fwlink/?linkid=2239776"
-            curl -Lo /mnt/var/tmp/MicCorUEFCA2011.crt "https://go.microsoft.com/fwlink/?linkid=321194"
-            curl -Lo /mnt/var/tmp/MicWinProPCA2011.crt "https://go.microsoft.com/fwlink/?linkid=321192"
+            set -e
+            curl -fLo /mnt/var/tmp/MicCorUEFCA2023.crt "https://go.microsoft.com/fwlink/?linkid=2239776"
+            curl -fLo /mnt/var/tmp/MicCorUEFCA2011.crt "https://go.microsoft.com/fwlink/?linkid=321194"
+            curl -fLo /mnt/var/tmp/MicWinProPCA2011.crt "https://go.microsoft.com/fwlink/?linkid=321192"
+
+        - name: Verify Microsoft UEFI certificate subjects
+          shell: |
+            set -eu
+            verify_cert() {
+              file="$1"
+              expected_cn="$2"
+              subject="$(openssl x509 -in "$file" -inform DER -noout -subject 2>/dev/null \
+                || openssl x509 -in "$file" -inform PEM -noout -subject)"
+              if ! printf '%s' "$subject" | grep -qF "CN = $expected_cn"; then
+                echo "Subject mismatch for $file" >&2
+                echo "  got:      $subject" >&2
+                echo "  expected: CN = $expected_cn" >&2
+                exit 1
+              fi
+            }
+            verify_cert /mnt/var/tmp/MicCorUEFCA2023.crt "Microsoft UEFI CA 2023"
+            verify_cert /mnt/var/tmp/MicCorUEFCA2011.crt "Microsoft Corporation UEFI CA 2011"
+            verify_cert /mnt/var/tmp/MicWinProPCA2011.crt "Microsoft Windows Production PCA 2011"
 
         - name: Create EFI signature lists and signed auth files
           shell: |

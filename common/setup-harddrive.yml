@@ -13,6 +13,8 @@
           command: find "{{ install_device_dir }}" -wholename "{{ install_device }}*" -exec wipefs --force --all {} \;
         - name: Sync partition table
           command: partprobe "{{ install_device }}"
+        - name: Wait for udev to settle
+          command: udevadm settle
 
     - name: Format SSD with 4096 byte sector size
       command: nvme format --block-size=4096 "{{ install_device }}"
@@ -27,6 +29,8 @@
           command: sgdisk -n "2::{{ system_partition_size }}" -t "2:8300" "{{ install_device }}"
         - name: Sync partition table
           command: partprobe "{{ install_device }}"
+        - name: Wait for udev to settle
+          command: udevadm settle
 
     - name: Encrypt partitions
       block:
