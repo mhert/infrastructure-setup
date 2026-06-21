@@ -30,8 +30,10 @@
               --output /usr/lib/systemd/boot/efi/systemd-bootx64.efi.signed \
               /usr/lib/systemd/boot/efi/systemd-bootx64.efi
 
-        - name: Update bootloader with signed version
-          shell: arch-chroot /mnt bootctl update
+        - name: Install signed systemd-boot on ESP
+          shell: |
+            arch-chroot /mnt cp /usr/lib/systemd/boot/efi/systemd-bootx64.efi.signed /efi/EFI/systemd/systemd-bootx64.efi
+            arch-chroot /mnt cp /usr/lib/systemd/boot/efi/systemd-bootx64.efi.signed /efi/EFI/BOOT/BOOTX64.EFI
 
         - name: Install systemd-boot Secure Boot signing pacman hook
           block:
