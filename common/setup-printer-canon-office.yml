@@ -1,0 +1,39 @@
+- hosts: all
+  become: true
+  vars:
+    printer_name: canon-office
+    # printer_device_uri (e.g. socket://192.0.2.10) is site specific and comes from
+    # group_vars/all.yml (copy group_vars/all.yml.example) or -e.
+    # UFR II PPD from cnrdrvcups-lb-bin (AUR). Driverless/IPP-Everywhere setup is
+    # impossible for this device: the MF745C/746C firmware (10.03) emits a malformed
+    # Get-Printer-Attributes response (nameless media-size-supported collection)
+    # that libcups rejects, so lpadmin -m everywhere fails against it.
+    printer_ppd: CNRCUPSMF745CZK.ppd
+
+  tasks:
+    - name: Check printer_device_uri is set
+      ansible.builtin.assert:
+        that: printer_device_uri is defined
+        fail_msg: "set printer_device_uri in group_vars/all.yml (see group_vars/all.yml.example) or with -e"
+
+    - name: Check Canon UFR II driver PPD is available
+      stat:
+        path: "/usr/share/cups/model/{{ printer_ppd }}"
+      register: ppd_file
+
+    - name: Fail when Canon UFR II driver is missing
+      fail:
+        msg: "PPD /usr/share/cups/model/{{ printer_ppd }} not found - install cnrdrvcups-lb-bin (AUR) first"
+      when: not ppd_file.stat.exists
+
+    - name: Enable and start cups
+      shell: systemctl enable --now cups
+
+    - name: Configure printer queue
+      block:
+        - name: Create queue with UFR II driver
+          shell: lpadmin -p "{{ printer_name }}" -v "{{ printer_device_uri }}" -m "{{ printer_ppd }}" -E
+        - name: Default to double-sided printing (long-edge binding)
+          shell: lpadmin -p "{{ printer_name }}" -o Duplex=DuplexNoTumble
+        - name: Default to A4 paper (PPD default is Letter)
+          shell: lpadmin -p "{{ printer_name }}" -o PageSize=A4

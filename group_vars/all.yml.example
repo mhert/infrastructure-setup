@@ -1,0 +1,2 @@
+# Site-specific values. Copy to group_vars/all.yml (gitignored) and fill in.
+printer_device_uri: socket://192.0.2.10

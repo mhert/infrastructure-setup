@@ -68,15 +68,27 @@ The playbooks do not create a regular user. After booting into the new system, c
 homectl create <username> --shell=/bin/zsh --member-of=wheel
 ```
 
+### Printer (canon-office)
+
+Sets up the Canon MF745C/746C office printer with the UFR II driver, double-sided printing and A4 as defaults. Run on the installed system (not the live environment); requires `cnrdrvcups-lb-bin` from AUR (see below):
+
+```bash
+ansible-playbook common/setup-printer-canon-office.yml -i inventory.yml --limit <host>
+```
+
+The printer URL comes from `printer_device_uri` in `group_vars/all.yml` (copy `group_vars/all.yml.example`) or `-e printer_device_uri=socket://...`. The playbook deliberately uses the vendor PPD instead of driverless IPP Everywhere: the printer's firmware (10.03) sends a malformed IPP attributes response that CUPS rejects, so `lpadmin -m everywhere` fails against it.
+
 ## Project structure
 
 ```
 inventory.yml                        # Host definitions and disk/encryption variables
+group_vars/all.yml.example           # Site-specific values; copy to group_vars/all.yml (gitignored)
 common/
   setup-harddrive.yml                # Partitioning, encryption, btrfs subvolumes
   setup-basic-system.yml             # Base system, packages, services, bootloader
   setup-secure-boot.yml              # Secure Boot key generation, signing, enrollment
   setup-plasma6-desktop.yml          # KDE Plasma 6 and desktop applications
+  setup-printer-canon-office.yml     # Canon MF745C/746C print queue (post-install)
   files/                             # Config files deployed by common playbooks
 <host>/
   setup-system-specific.yml          # Hardware-specific packages and configuration

@@ -1,2 +1,4 @@
 # Machine-specific inventory (disks, hostnames, connection settings); see inventory.yml.example
 inventory.yml
+# Site-specific values (printer address, USB/IP server); see group_vars/all.yml.example
+group_vars/all.yml
