@@ -1,0 +1,10 @@
+[Unit]
+Description=Re-attach the KNX licence stick while it is missing
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=1min
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target

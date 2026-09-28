@@ -78,6 +78,16 @@ ansible-playbook common/setup-printer-canon-office.yml -i inventory.yml --limit 
 
 The printer URL comes from `printer_device_uri` in `group_vars/all.yml` (copy `group_vars/all.yml.example`) or `-e printer_device_uri=socket://...`. The playbook deliberately uses the vendor PPD instead of driverless IPP Everywhere: the printer's firmware (10.03) sends a malformed IPP attributes response that CUPS rejects, so `lpadmin -m everywhere` fails against it.
 
+### KNX licence stick (USB/IP)
+
+The ETS6 licence stick sits in a server that exports it over USB/IP (`usbipd`). This playbook installs `usbip`, a oneshot service that attaches the stick through `vhci-hcd` (skipped while `usbip port` already lists it) and a timer that re-runs it 30 s after boot and then every minute, so the stick returns by itself after a WiFi drop or a reboot. The VirtualBox VM running ETS captures it with its USB filter for `2a07:0102`. The server's name and the stick's bus id there (`usbip list -l` on the server) come from `usbip_server` and `usbip_busid` in `group_vars/all.yml` (copy `group_vars/all.yml.example`). Run on the installed system (not the live environment):
+
+```bash
+ansible-playbook common/setup-knx-license-stick.yml -i inventory.yml --limit <host>
+```
+
+Check with `lsusb | grep 2a07` and `journalctl -u usbip-knx-license-stick.service`; `usbip detach -p 0` (as root) frees the stick for another client, the timer takes it back within a minute unless stopped.
+
 ## Project structure
 
 ```
@@ -89,7 +99,9 @@ common/
   setup-secure-boot.yml              # Secure Boot key generation, signing, enrollment
   setup-plasma6-desktop.yml          # KDE Plasma 6 and desktop applications
   setup-printer-canon-office.yml     # Canon MF745C/746C print queue (post-install)
+  setup-knx-license-stick.yml        # USB/IP client for the ETS licence stick (post-install)
   files/                             # Config files deployed by common playbooks
+  templates/                         # Templates rendered by common playbooks
 <host>/
   setup-system-specific.yml          # Hardware-specific packages and configuration
   files/                             # Config files deployed by the host playbook

@@ -1,0 +1,46 @@
+- name: Attach the KNX licence stick over USB/IP
+  hosts: all
+  become: true
+  # The ETS6 licence stick (USB 2a07:0102) sits in a server that exports it with
+  # USB/IP (usbipd). This host attaches it through vhci-hcd, where it shows up as a
+  # local USB device, and the VirtualBox VM running ETS captures it with its USB
+  # filter for 2a07:0102. The timer re-attaches the stick every minute while it is
+  # missing, so it comes back after a WiFi drop or a reboot without anyone typing.
+  # Off the home LAN the attempt fails fast under `timeout` and does no harm.
+  # usbip_server and usbip_busid come from group_vars/all.yml (see the .example).
+  tasks:
+    - name: Check the USB/IP server settings are set
+      ansible.builtin.assert:
+        that:
+          - usbip_server is defined
+          - usbip_busid is defined
+        fail_msg: "set usbip_server and usbip_busid in group_vars/all.yml (see group_vars/all.yml.example) or with -e"
+
+    - name: Install usbip
+      community.general.pacman:
+        name: usbip
+        state: present
+
+    - name: Install the attach service
+      ansible.builtin.template:
+        src: usbip-knx-license-stick.service.j2
+        dest: /etc/systemd/system/usbip-knx-license-stick.service
+        mode: "0644"
+
+    - name: Install the attach timer
+      ansible.builtin.copy:
+        src: usbip/usbip-knx-license-stick.timer
+        dest: /etc/systemd/system/usbip-knx-license-stick.timer
+        mode: "0644"
+
+    - name: Enable the timer
+      ansible.builtin.systemd_service:
+        name: usbip-knx-license-stick.timer
+        daemon_reload: true
+        enabled: true
+        state: started
+
+    - name: Attach the stick now
+      ansible.builtin.systemd_service:
+        name: usbip-knx-license-stick.service
+        state: started

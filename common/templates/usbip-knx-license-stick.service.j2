@@ -1,0 +1,11 @@
+[Unit]
+Description=Attach the KNX licence stick over USB/IP; the ETS VM captures it by USB filter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/modprobe vhci-hcd
+# Idempotent: attach only while `usbip port` does not list the stick. `timeout` keeps a
+# laptop outside the house LAN from sitting in the TCP connect for minutes.
+ExecStart=/bin/sh -c 'usbip port | grep -q 2a07:0102 || exec timeout 15 usbip attach -r {{ usbip_server }} -b {{ usbip_busid }}'

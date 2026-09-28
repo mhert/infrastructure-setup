@@ -1,2 +1,6 @@
 # Site-specific values. Copy to group_vars/all.yml (gitignored) and fill in.
 printer_device_uri: socket://192.0.2.10
+# Host that exports the KNX licence stick with usbipd, and the stick's bus id there
+# (`usbip list -l` on that host).
+usbip_server: usbip.example.com
+usbip_busid: 1-1.1
