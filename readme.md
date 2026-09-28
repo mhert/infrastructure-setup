@@ -17,7 +17,7 @@ Ansible playbooks for automated Arch Linux installations with LUKS encryption, b
 - A running Arch Linux live environment (USB installer) on the target machine
 - Ansible installed in the live environment (`pacman -Sy ansible`)
 - This repository cloned or copied to the live environment
-- Fill in connection and credential variables in `inventory.yml` for the target host
+- Copy `inventory.yml.example` to `inventory.yml` (gitignored) and fill in the connection variables, the hostname and the disk layout of the target host
 
 ## What gets installed
 
@@ -91,7 +91,7 @@ The playbook also shortens the host's TCP keepalive probing (`/etc/sysctl.d/90-u
 ## Project structure
 
 ```
-inventory.yml                        # Host definitions and disk/encryption variables
+inventory.yml.example                # Host definitions and disk/encryption variables; copy to inventory.yml (gitignored)
 group_vars/all.yml.example           # Site-specific values; copy to group_vars/all.yml (gitignored)
 common/
   setup-harddrive.yml                # Partitioning, encryption, btrfs subvolumes
