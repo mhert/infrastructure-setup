@@ -5,7 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStartPre=/usr/bin/modprobe vhci-hcd
+# Tolerant: between a kernel upgrade and the next reboot the running kernel's module
+# directory is gone, modprobe fails, but the module is still loaded and the attach
+# works. If vhci-hcd is really missing, `usbip port` fails and so does the attach.
+ExecStartPre=-/usr/bin/modprobe vhci-hcd
 # Idempotent: attach only while `usbip port` does not list the stick. `timeout` keeps a
 # laptop outside the house LAN from sitting in the TCP connect for minutes.
 ExecStart=/bin/sh -c 'usbip port | grep -q 2a07:0102 || exec timeout 15 usbip attach -r {{ usbip_server }} -b {{ usbip_busid }}'
