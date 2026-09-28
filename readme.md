@@ -86,7 +86,7 @@ The ETS6 licence stick sits in a server that exports it over USB/IP (`usbipd`). 
 ansible-playbook common/setup-knx-license-stick.yml -i inventory.yml --limit <host>
 ```
 
-Check with `lsusb | grep 2a07` and `journalctl -u usbip-knx-license-stick.service`; `usbip detach -p 0` (as root) frees the stick for another client, the timer takes it back within a minute unless stopped.
+The playbook also shortens the host's TCP keepalive probing (`/etc/sysctl.d/90-usbip-tcp-keepalive.conf`, 3 probes every 10 s on top of Arch's 120 s idle time) so a vanished USB/IP server or an address change frees the dead attach after about 150 s instead of 13 min; `usbip attach` sets keepalive on its socket but has no per-socket timing. Check with `lsusb | grep 2a07` and `journalctl -u usbip-knx-license-stick.service`; `usbip detach -p 0` (as root) frees the stick for another client, the timer takes it back within a minute unless stopped.
 
 ## Project structure
 

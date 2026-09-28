@@ -33,6 +33,13 @@
         dest: /etc/systemd/system/usbip-knx-license-stick.timer
         mode: "0644"
 
+    - name: Drop a dead USB/IP peer after 150 s instead of 13 min
+      ansible.builtin.copy:
+        src: usbip/sysctl-tcp-keepalive.conf
+        dest: /etc/sysctl.d/90-usbip-tcp-keepalive.conf
+        mode: "0644"
+      notify: Apply the keepalive sysctls
+
     - name: Enable the timer
       ansible.builtin.systemd_service:
         name: usbip-knx-license-stick.timer
@@ -44,3 +51,8 @@
       ansible.builtin.systemd_service:
         name: usbip-knx-license-stick.service
         state: started
+
+  handlers:
+    - name: Apply the keepalive sysctls
+      ansible.builtin.command: sysctl --system
+      changed_when: true
